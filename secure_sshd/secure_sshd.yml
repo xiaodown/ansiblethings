@@ -1,0 +1,47 @@
+---
+- hosts: all
+  tasks:
+    - name: Copy issue.net to remote server
+      copy: 
+        src: issue.net
+        dest: /etc/issue.net
+    - name: Ensure permissions are set correctly on sshd_config
+      file:
+        path: /etc/ssh/sshd_config
+        owner: root
+        group: root
+        mode: '0600'
+  vars:
+      sshd_skip_defaults: true
+      sshd:
+          # AWS defaults (required to access box)
+          
+          UsePAM: yes
+          PasswordAuthentication: no
+          ChallengeResponseAuthentication: no
+          AcceptEnv: LANG LC_*
+          Subsystem:   sftp    /usr/lib/openssh/sftp-server
+
+          PermitRootLogin: yes  # can be changed if ansible uses sudo (this is a CIS exception)
+
+          # All of the below are from the CIS Ubuntu 18.04 Benchmark.
+          # CAUTION: this could cause undesired results; this should be evaluated before implementing
+          
+          Protocol: 2
+          LogLevel: INFO
+          X11Forwarding: no
+          MaxAuthTries: 4
+          IgnoreRhosts: yes
+          HostbasedAuthentication: no
+          PermitEmptyPasswords: no
+          PermitUserEnvironment: no
+          MACs: hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com
+          ClientAliveInterval: 300 
+          ClientAliveCountMax: 0
+          LoginGraceTime: 60
+          Banner: /etc/issue.net
+
+  roles:
+    - sshd
+
+
